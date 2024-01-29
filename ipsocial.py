@@ -70,9 +70,9 @@ def process_image(image_path, original_image):
 
     # Update the result label
     if people_violating_distance > 0:
-        return "Alert", None
+        return "Alert,there is social distance violation", None
     else:
-        return "Safe", None
+        return "Safe,no violation", None
 
 class SocialDistanceApp:
     def __init__(self, root):
