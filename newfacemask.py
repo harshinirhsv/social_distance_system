@@ -1,18 +1,17 @@
-import os
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 import cv2
 import numpy as np
+
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.models import load_model
-
 class FaceMaskDetectionApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Face Mask Detection")
-        
+
         self.upload_button = tk.Button(root, text="Upload Image", command=self.upload_image)
         self.upload_button.pack(pady=20)
 
@@ -35,7 +34,7 @@ class FaceMaskDetectionApp:
 
     def show_image(self, file_path):
         img = Image.open(file_path)
-        img.thumbnail((250, 250))
+        img.thumbnail((800, 800))  # Increase thumbnail size
         img = ImageTk.PhotoImage(img)
         self.image_label.config(image=img)
         self.image_label.image = img
@@ -74,38 +73,38 @@ class FaceMaskDetectionApp:
 
                 (mask, without_mask) = model.predict(face)[0]
                 label = "Mask" if mask > without_mask else "No Mask"
+
                 confidence = max(mask, without_mask) * 100
                 predictions.append((label, confidence, (startX, startY, endX, endY)))
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
 
         return predictions
 
     def display_results(self, image, predictions):
         for (label, confidence, (startX, startY, endX, endY)) in predictions:
-            cv2.putText(image, "{}: {:.2f}%".format(label, confidence), (startX, startY - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 0), 2)
-            cv2.rectangle(image, (startX, startY), (endX, endY), (0, 255, 0), 2)
+            # Choose color based on the label
+            color = (0, 255, 0)  # Default: Green for "mask"
+            if label == "No Mask":
+                color = (0, 0, 255)  # Red for "no mask"
 
+            # Display label and confidence
+            cv2.putText(image, "{}: {:.2f}%".format(label, confidence), (startX, startY - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
+
+            # Draw rectangle with the chosen color
+            cv2.rectangle(image, (startX, startY), (endX, endY), color, 2)
+
+        # Maximize the output image
         output_path = "result.jpg"
         cv2.imwrite(output_path, image)
         self.show_image(output_path)
         self.prediction_label.config(text="Detection completed.")
 
+
 if __name__ == "__main__":
     prototxtPath = "face_detector/deploy.prototxt"
     weightsPath = "face_detector/res10_300x300_ssd_iter_140000.caffemodel"
     net = cv2.dnn.readNet(prototxtPath, weightsPath)
-    
+
     model = load_model("classifier.model")
 
     root = tk.Tk()
